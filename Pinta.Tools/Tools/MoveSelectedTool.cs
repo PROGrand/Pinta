@@ -59,7 +59,7 @@ namespace Pinta.Tools
 		protected override Rectangle GetSourceRectangle ()
 		{
 			Document doc = PintaCore.Workspace.ActiveDocument;
-			return doc.Selection.SelectionPath.GetBounds().ToCairoRectangle();
+			return doc.Selection.SelectionPath.GetBounds ().ToCairoRectangle ();
 		}
 
 		protected override void OnStartTransform ()
@@ -87,7 +87,7 @@ namespace Pinta.Tools
 				//Use same BlendMode, Opacity and Visibility for SelectionLayer
 				doc.SelectionLayer.BlendMode = doc.CurrentUserLayer.BlendMode;
 				doc.SelectionLayer.Opacity = doc.CurrentUserLayer.Opacity;
-				doc.SelectionLayer.Hidden = doc.CurrentUserLayer.Hidden;					
+				doc.SelectionLayer.Hidden = doc.CurrentUserLayer.Hidden;
 
 				using (Cairo.Context g = new Cairo.Context (doc.SelectionLayer.Surface)) {
 					g.AppendPath (doc.Selection.SelectionPath);
@@ -98,15 +98,21 @@ namespace Pinta.Tools
 				}
 
 				Cairo.ImageSurface surf = doc.CurrentUserLayer.Surface;
-				
+
 				using (Cairo.Context g = new Cairo.Context (surf)) {
 					g.AppendPath (doc.Selection.SelectionPath);
 					g.FillRule = FillRule.EvenOdd;
-					g.Operator = Cairo.Operator.Clear;
+					if (is_alt_pressed) {
+
+						g.Operator = Cairo.Operator.Clear;
+					} else {
+						g.Operator = Operator.Source;
+						g.SetSourceColor (PintaCore.Palette.SecondaryColor);
+					}
 					g.Fill ();
 				}
 			}
-			
+
 			PintaCore.Workspace.Invalidate ();
 		}
 
@@ -153,7 +159,7 @@ namespace Pinta.Tools
 			}
 		}
 
-		protected override void OnDeactivated(BaseTool newTool)
+		protected override void OnDeactivated (BaseTool newTool)
 		{
 			base.OnDeactivated (newTool);
 
