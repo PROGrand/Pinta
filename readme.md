@@ -1,3 +1,15 @@
+# PintaSolid - desktop mod
+
+Goal is to maximize convenience when program is used as sci-fi sketch desk
+
+## Solid Functionality
+
+- Eraser tool: left mouse clears to background, right mouse clears to transparent.
+- Move Tool: fills to background, alt key fills to transparent.
+- New image: take size from last new image dialog and show actual size image in case of window is maximized.
+- Restore brush tools sizes on reload
+
+
 # Pinta - [Simple Gtk# Paint Program](http://pinta-project.com/)
 
 [![Build Status](https://github.com/PintaProject/Pinta/workflows/Build/badge.svg)](https://github.com/PintaProject/Pinta/actions)

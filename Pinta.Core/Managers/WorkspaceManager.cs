@@ -1,21 +1,21 @@
-// 
+//
 // WorkspaceManager.cs
-//  
+//
 // Author:
 //       Jonathan Pobst <monkey@jpobst.com>
-// 
+//
 // Copyright (c) 2010 Jonathan Pobst
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,11 +37,11 @@ namespace Pinta.Core
 	{
 		private int active_document_index = -1;
 		private int new_file_name = 1;
-		
+
 		public WorkspaceManager ()
 		{
 			OpenDocuments = new List<Document> ();
-            SelectionHandler = new SelectionModeHandler ();
+			SelectionHandler = new SelectionModeHandler ();
 		}
 
 		public int ActiveDocumentIndex {
@@ -49,24 +49,26 @@ namespace Pinta.Core
 				return active_document_index;
 			}
 		}
-		
+
 		public Document ActiveDocument {
 			get {
 				if (HasOpenDocuments)
 					return OpenDocuments[active_document_index];
-				
-				throw new InvalidOperationException ("Tried to get WorkspaceManager.ActiveDocument when there are no open Documents.  Check HasOpenDocuments first.");
+
+				throw new InvalidOperationException (
+					"Tried to get WorkspaceManager.ActiveDocument when there are no open Documents.  Check HasOpenDocuments first.");
 			}
 		}
 
-        public SelectionModeHandler SelectionHandler { get; private set; }
+		public SelectionModeHandler SelectionHandler { get; private set; }
 
 		public DocumentWorkspace ActiveWorkspace {
 			get {
 				if (HasOpenDocuments)
 					return OpenDocuments[active_document_index].Workspace;
 
-				throw new InvalidOperationException ("Tried to get WorkspaceManager.ActiveWorkspace when there are no open Documents.  Check HasOpenDocuments first.");
+				throw new InvalidOperationException (
+					"Tried to get WorkspaceManager.ActiveWorkspace when there are no open Documents.  Check HasOpenDocuments first.");
 			}
 		}
 
@@ -79,33 +81,33 @@ namespace Pinta.Core
 			get { return ActiveWorkspace.CanvasSize; }
 			set { ActiveWorkspace.CanvasSize = value; }
 		}
-		
+
 		public PointD Offset {
 			get { return ActiveWorkspace.Offset; }
 		}
-		
+
 		public double Scale {
 			get { return ActiveWorkspace.Scale; }
 			set { ActiveWorkspace.Scale = value; }
 		}
-		
+
 		public List<Document> OpenDocuments { get; private set; }
 		public bool HasOpenDocuments { get { return OpenDocuments.Count > 0; } }
-		
+
 		public Document CreateAndActivateDocument (string filename, Gdk.Size size)
 		{
 			Document doc = new Document (size);
-			
+
 			if (string.IsNullOrEmpty (filename))
 				doc.Filename = string.Format (Catalog.GetString ("Unsaved Image {0}"), new_file_name++);
 			else
 				doc.PathAndFileName = filename;
-			
+
 			OpenDocuments.Add (doc);
 			OnDocumentCreated (new DocumentEventArgs (doc));
 
 			SetActiveDocument (doc);
-			
+
 			return doc;
 		}
 
@@ -113,12 +115,12 @@ namespace Pinta.Core
 		{
 			CloseDocument (ActiveDocument);
 		}
-		
+
 		public void CloseDocument (Document document)
 		{
 			int index = OpenDocuments.IndexOf (document);
 			OpenDocuments.Remove (document);
-			
+
 			if (index == active_document_index) {
 				// If there's other documents open, switch to one of them
 				if (HasOpenDocuments) {
@@ -133,16 +135,16 @@ namespace Pinta.Core
 			}
 
 			document.Close ();
-			
+
 			OnDocumentClosed (new DocumentEventArgs (document));
 		}
-		
+
 		public void Invalidate ()
 		{
 			if (PintaCore.Workspace.HasOpenDocuments)
 				ActiveWorkspace.Invalidate ();
 		}
-		
+
 		public void Invalidate (Gdk.Rectangle rect)
 		{
 			ActiveWorkspace.Invalidate (rect);
@@ -164,12 +166,12 @@ namespace Pinta.Core
 			}
 
 			doc.Workspace.History.PushNewItem (new BaseHistoryItem (Stock.New, Catalog.GetString ("New Image")));
-			doc.Workspace.History.SetClean();
+			doc.Workspace.History.SetClean ();
 
 			// This ensures these are called after the window is done being created and sized.
 			// Without it, we sometimes try to zoom when the window has a size of (0, 0).
 			Gtk.Application.Invoke (delegate {
-				PintaCore.Actions.View.ZoomToWindow.Activate ();
+				PintaCore.Actions.View.ActualSize.Activate ();
 			});
 
 			return doc;
@@ -187,39 +189,39 @@ namespace Pinta.Core
 				// Open the image and add it to the layers
 				IImageImporter importer = PintaCore.System.ImageFormats.GetImporterByFile (file);
 				if (importer == null)
-					throw new FormatException( Catalog.GetString ("Unsupported file format"));
+					throw new FormatException (Catalog.GetString ("Unsupported file format"));
 
 				importer.Import (file, parent);
 
 				PintaCore.Workspace.ActiveDocument.PathAndFileName = file;
 				PintaCore.Workspace.ActiveWorkspace.History.PushNewItem (new BaseHistoryItem (Stock.Open, Catalog.GetString ("Open Image")));
-				PintaCore.Workspace.ActiveDocument.History.SetClean();
+				PintaCore.Workspace.ActiveDocument.History.SetClean ();
 				PintaCore.Workspace.ActiveDocument.HasFile = true;
 
-                // This ensures these are called after the window is done being created and sized.
-                // Without it, we sometimes try to zoom when the window has a size of (0, 0).
-                Gtk.Application.Invoke (delegate {
-				    PintaCore.Actions.View.ZoomToWindow.Activate ();
-				    PintaCore.Workspace.Invalidate ();
-                });
+				// This ensures these are called after the window is done being created and sized.
+				// Without it, we sometimes try to zoom when the window has a size of (0, 0).
+				Gtk.Application.Invoke (delegate {
+					PintaCore.Actions.View.ActualSize.Activate ();
+					PintaCore.Workspace.Invalidate ();
+				});
 
 				fileOpened = true;
 			} catch (UnauthorizedAccessException e) {
 				ShowOpenFileErrorDialog (parent, file, Catalog.GetString ("Permission denied"), e.ToString ());
 			} catch (FormatException e) {
-				ShowUnsupportedFormatDialog (parent, file, e.Message, e.ToString());
+				ShowUnsupportedFormatDialog (parent, file, e.Message, e.ToString ());
 			} catch (Exception e) {
 				ShowOpenFileErrorDialog (parent, file, e.Message, e.ToString ());
 			}
 
 			return fileOpened;
 		}
-		
+
 		public void ResizeImage (int width, int height)
 		{
 			ActiveDocument.ResizeImage (width, height);
 		}
-		
+
 		public void ResizeCanvas (int width, int height, Anchor anchor, CompoundHistoryItem compoundAction)
 		{
 			ActiveDocument.ResizeCanvas (width, height, anchor, compoundAction);
@@ -263,7 +265,7 @@ namespace Pinta.Core
 		public bool ImageFitsInWindow {
 			get { return ActiveWorkspace.ImageFitsInWindow; }
 		}
-		
+
 		internal void ResetTitle ()
 		{
 			if (HasOpenDocuments)
@@ -278,10 +280,10 @@ namespace Pinta.Core
 				throw new ArgumentOutOfRangeException ("Tried to WorkspaceManager.SetActiveDocument greater than OpenDocuments.");
 			if (index < 0)
 				throw new ArgumentOutOfRangeException ("Tried to WorkspaceManager.SetActiveDocument less that zero.");
-			
+
 			SetActiveDocument (OpenDocuments[index]);
 		}
-		
+
 		public void SetActiveDocument (Document document)
 		{
 			RadioAction action = PintaCore.Actions.Window.OpenWindows.Where (p => p.Name == document.Guid.ToString ()).FirstOrDefault ();
@@ -304,23 +306,24 @@ namespace Pinta.Core
 
 			OnActiveDocumentChanged (EventArgs.Empty);
 		}
-		
+
 		#region Protected Methods
+
 		protected void OnActiveDocumentChanged (EventArgs e)
 		{
 			if (ActiveDocumentChanged != null)
 				ActiveDocumentChanged (this, EventArgs.Empty);
 
-            OnSelectionChanged ();
-				
+			OnSelectionChanged ();
+
 			ResetTitle ();
 		}
 
 		protected internal void OnDocumentCreated (DocumentEventArgs e)
 		{
-            e.Document.SelectionChanged += (sender, args) => {
-		        OnSelectionChanged ();
-		    };
+			e.Document.SelectionChanged += (sender, args) => {
+				OnSelectionChanged ();
+			};
 
 			if (DocumentCreated != null)
 				DocumentCreated (this, e);
@@ -340,45 +343,47 @@ namespace Pinta.Core
 
 		private void OnSelectionChanged ()
 		{
-            if (SelectionChanged != null)
-                SelectionChanged.Invoke(this, EventArgs.Empty);
-        }
-#endregion
+			if (SelectionChanged != null)
+				SelectionChanged.Invoke (this, EventArgs.Empty);
+		}
 
-        private void ShowOpenFileErrorDialog (Window parent, string filename, string primaryText, string details)
+		#endregion
+
+		private void ShowOpenFileErrorDialog (Window parent, string filename, string primaryText, string details)
 		{
 			string markup = "<span weight=\"bold\" size=\"larger\">{0}</span>\n\n{1}";
 			string secondaryText = string.Format (Catalog.GetString ("Could not open file: {0}"), filename);
 			string message = string.Format (markup, primaryText, secondaryText);
-			PintaCore.Chrome.ShowErrorDialog(parent, message, details);
+			PintaCore.Chrome.ShowErrorDialog (parent, message, details);
 		}
 
 		private void ShowUnsupportedFormatDialog (Window parent, string filename, string primaryText, string details)
 		{
 			string markup = "<span weight=\"bold\" size=\"larger\">{0}</span>\n\n{1}";
 
-			string secondaryText = string.Format(Catalog.GetString("Could not open file: {0}"), filename);
-			secondaryText += string.Format("\n\n{0}\n", Catalog.GetString("Pinta supports the following file formats:"));
+			string secondaryText = string.Format (Catalog.GetString ("Could not open file: {0}"), filename);
+			secondaryText += string.Format ("\n\n{0}\n", Catalog.GetString ("Pinta supports the following file formats:"));
 			var extensions = from format in PintaCore.System.ImageFormats.Formats
-							 where format.Importer != null
-							 from extension in format.Extensions
-							 where char.IsLower(extension.FirstOrDefault())
-							 orderby extension
-							 select extension;
+				where format.Importer != null
+				from extension in format.Extensions
+				where char.IsLower (extension.FirstOrDefault ())
+				orderby extension
+				select extension;
 
-			secondaryText += String.Join(", ", extensions);
+			secondaryText += String.Join (", ", extensions);
 
 			string message = string.Format (markup, primaryText, secondaryText);
-			PintaCore.Chrome.ShowUnsupportedFormatDialog(parent, message, details);
+			PintaCore.Chrome.ShowUnsupportedFormatDialog (parent, message, details);
 		}
 
 		#region Public Events
+
 		public event EventHandler ActiveDocumentChanged;
 		public event EventHandler<DocumentEventArgs> DocumentCreated;
 		public event EventHandler<DocumentEventArgs> DocumentOpened;
 		public event EventHandler<DocumentEventArgs> DocumentClosed;
 		public event EventHandler SelectionChanged;
-#endregion
-		
+
+		#endregion
 	}
 }

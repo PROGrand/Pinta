@@ -1,21 +1,21 @@
-// 
+//
 // Main.cs
-//  
+//
 // Author:
 //       Jonathan Pobst <monkey@jpobst.com>
-// 
+//
 // Copyright (c) 2010 Jonathan Pobst
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -50,46 +50,44 @@ namespace Pinta
 			}
 
 			int threads = -1;
-                        bool show_help = false;
-                        bool show_version = false;
-			
+			bool show_help = false;
+			bool show_version = false;
+
 			var p = new OptionSet () {
-                                { "h|help", Catalog.GetString("Show this message and exit."), v => show_help = v != null },
-                                { "v|version", Catalog.GetString("Display the application version."), v => show_version = v != null },
-				{ "rt|render-threads=", Catalog.GetString ("number of threads to use for rendering"), (int v) => threads = v }
+				{"h|help", Catalog.GetString ("Show this message and exit."), v => show_help = v != null},
+				{"v|version", Catalog.GetString ("Display the application version."), v => show_version = v != null},
+				{"rt|render-threads=", Catalog.GetString ("number of threads to use for rendering"), (int v) => threads = v}
 			};
 
 			List<string> extra;
-			
+
 			try {
 				extra = p.Parse (args);
 			} catch (OptionException e) {
 				Console.WriteLine (e.Message);
-                                ShowHelp (p);
+				ShowHelp (p);
 				return;
 			}
 
-                        if (show_version)
-                        {
-                            Console.WriteLine (PintaCore.ApplicationVersion);
-                            return;
-                        }
+			if (show_version) {
+				Console.WriteLine (PintaCore.ApplicationVersion);
+				return;
+			}
 
-                        if (show_help)
-                        {
-                            ShowHelp (p);
-                            return;
-                        }
+			if (show_help) {
+				ShowHelp (p);
+				return;
+			}
 
 			GLib.ExceptionManager.UnhandledException += new GLib.UnhandledExceptionHandler (ExceptionManager_UnhandledException);
 
 			if (SystemManager.GetOperatingSystem () == OS.Windows) {
 				SetWindowsGtkPath ();
 			}
-			
+
 			Application.Init ();
 			new MainWindow ();
-			
+
 			if (threads != -1)
 				Pinta.Core.PintaCore.System.RenderThreads = threads;
 
@@ -98,47 +96,59 @@ namespace Pinta
 			}
 
 			OpenFilesFromCommandLine (extra);
-			
+
 			Application.Run ();
 		}
 
-                private static void ShowHelp (OptionSet p)
-                {
-                    Console.WriteLine (Catalog.GetString ("Usage: pinta [files]"));
-                    Console.WriteLine ();
-                    Console.WriteLine (Catalog.GetString ("Options: "));
-                    p.WriteOptionDescriptions (Console.Out);
-                }
+		private static void ShowHelp (OptionSet p)
+		{
+			Console.WriteLine (Catalog.GetString ("Usage: pinta [files]"));
+			Console.WriteLine ();
+			Console.WriteLine (Catalog.GetString ("Options: "));
+			p.WriteOptionDescriptions (Console.Out);
+		}
 
 		private static void OpenFilesFromCommandLine (List<string> extra)
 		{
 			// Ignore the process serial number parameter on Mac OS X
-			if (PintaCore.System.OperatingSystem == OS.Mac && extra.Count > 0)
-			{
-				if (extra[0].StartsWith ("-psn_"))
-				{
+			if (PintaCore.System.OperatingSystem == OS.Mac && extra.Count > 0) {
+				if (extra[0].StartsWith ("-psn_")) {
 					extra.RemoveAt (0);
 				}
 			}
 
-			if (extra.Count > 0)
-			{
+			if (extra.Count > 0) {
 				foreach (var file in extra)
 					PintaCore.Workspace.OpenFile (file);
-			}
-			else
-			{
+			} else {
 				// Create a blank document
-				PintaCore.Workspace.NewDocument (new Gdk.Size (800, 600), new Cairo.Color (1, 1, 1));
+				var imgWidth = PintaCore.Settings.GetSetting<int> ("new-image-width", 800);
+				var imgHeight = PintaCore.Settings.GetSetting<int> ("new-image-height", 600);
+				var bgType = PintaCore.Settings.GetSetting<NewImageDialog.BackgroundType> (
+					"new-image-bg", NewImageDialog.BackgroundType.White);
+				PintaCore.Workspace.NewDocument (new Gdk.Size (imgWidth, imgHeight), NewImageBackground (bgType));
+			}
+		}
+
+		private static Cairo.Color NewImageBackground (NewImageDialog.BackgroundType NewImageBackgroundType)
+		{
+			switch (NewImageBackgroundType) {
+				case NewImageDialog.BackgroundType.White:
+					return new Cairo.Color (1, 1, 1);
+				case NewImageDialog.BackgroundType.Transparent:
+					return new Cairo.Color (1, 1, 1, 0);
+				case NewImageDialog.BackgroundType.SecondaryColor:
+				default:
+					return PintaCore.Palette.SecondaryColor;
 			}
 		}
 
 		private static void ExceptionManager_UnhandledException (GLib.UnhandledExceptionArgs args)
 		{
-			Exception ex = (Exception)args.ExceptionObject;
+			Exception ex = (Exception) args.ExceptionObject;
 			PintaCore.Chrome.ShowErrorDialog (PintaCore.Chrome.MainWindow,
-			                                  string.Format ("{0}:\n{1}", "Unhandled exception", ex.Message),
-			                                  ex.ToString ());
+				string.Format ("{0}:\n{1}", "Unhandled exception", ex.Message),
+				ex.ToString ());
 		}
 
 		/// <summary>
@@ -170,9 +180,11 @@ namespace Pinta
 							System.Console.Error.WriteLine ("Opening: {0}", filename);
 							PintaCore.Workspace.OpenFile (filename);
 						}
+
 						return false;
 					});
 				}
+
 				e.Handled = true;
 			};
 		}
@@ -204,8 +216,7 @@ namespace Pinta
 				if (SetDllDirectory (path)) {
 					return;
 				}
-			}
-			catch (EntryPointNotFoundException) {
+			} catch (EntryPointNotFoundException) {
 			}
 
 			System.Console.Error.WriteLine ("Unable to set GTK# dll directory");
