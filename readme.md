@@ -1,4 +1,4 @@
-# PintaSolid - desktop mod
+# PintaSolid - sketch desk mod
 
 Goal is to maximize convenience when program is used as sci-fi sketch desk
 
