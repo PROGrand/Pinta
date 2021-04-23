@@ -1,21 +1,21 @@
-// 
+//
 // EditActions.cs
-//  
+//
 // Author:
 //       Jonathan Pobst <monkey@jpobst.com>
-// 
+//
 // Copyright (c) 2010 Jonathan Pobst
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,9 +52,9 @@ namespace Pinta.Core
 		public Gtk.Action SavePalette { get; private set; }
 		public Gtk.Action ResetPalette { get; private set; }
 		public Gtk.Action ResizePalette { get; private set; }
-		
+
 		private string lastPaletteDir = null;
-		
+
 		public EditActions ()
 		{
 			Gtk.IconFactory fact = new Gtk.IconFactory ();
@@ -65,7 +65,7 @@ namespace Pinta.Core
 			fact.Add ("Menu.Edit.SelectAll.png", new Gtk.IconSet (PintaCore.Resources.GetIcon ("Menu.Edit.SelectAll.png")));
 			fact.Add ("Menu.Edit.Addins.png", new Gtk.IconSet (PintaCore.Resources.GetIcon ("Menu.Edit.Addins.png")));
 			fact.AddDefault ();
-			
+
 			Undo = new Gtk.Action ("Undo", Catalog.GetString ("Undo"), null, Stock.Undo);
 			Redo = new Gtk.Action ("Redo", Catalog.GetString ("Redo"), null, Stock.Redo);
 			Cut = new Gtk.Action ("Cut", Catalog.GetString ("Cut"), null, Stock.Cut);
@@ -79,7 +79,7 @@ namespace Pinta.Core
 			InvertSelection = new Gtk.Action ("InvertSelection", Catalog.GetString ("Invert Selection"), null, "Menu.Edit.InvertSelection.png");
 			SelectAll = new Gtk.Action ("SelectAll", Catalog.GetString ("Select All"), null, Stock.SelectAll);
 			Deselect = new Gtk.Action ("Deselect", Catalog.GetString ("Deselect All"), null, "Menu.Edit.Deselect.png");
-			
+
 			LoadPalette = new Gtk.Action ("LoadPalette", Catalog.GetString ("Open..."), null, Stock.Open);
 			SavePalette = new Gtk.Action ("SavePalette", Catalog.GetString ("Save As..."), null, Stock.Save);
 			ResetPalette = new Gtk.Action ("ResetPalette", Catalog.GetString ("Reset to Default"), null, Stock.RevertToSaved);
@@ -95,6 +95,7 @@ namespace Pinta.Core
 		}
 
 		#region Initialization
+
 		public void CreateMainMenu (Gtk.Menu menu)
 		{
 			menu.Append (Undo.CreateAcceleratedMenuItem (Gdk.Key.Z, Gdk.ModifierType.ControlMask));
@@ -110,7 +111,7 @@ namespace Pinta.Core
 			menu.Append (Paste.CreateAcceleratedMenuItem (Gdk.Key.V, Gdk.ModifierType.ControlMask));
 			menu.Append (PasteIntoNewLayer.CreateAcceleratedMenuItem (Gdk.Key.V, Gdk.ModifierType.ShiftMask | Gdk.ModifierType.ControlMask));
 			menu.Append (PasteIntoNewImage.CreateAcceleratedMenuItem (Gdk.Key.V, Gdk.ModifierType.Mod1Mask | Gdk.ModifierType.ControlMask));
-			
+
 			menu.AppendSeparator ();
 			menu.Append (SelectAll.CreateAcceleratedMenuItem (Gdk.Key.A, Gdk.ModifierType.ControlMask));
 
@@ -119,10 +120,10 @@ namespace Pinta.Core
 			menu.Append (deslect);
 
 			menu.AppendSeparator ();
-			menu.Append (EraseSelection.CreateAcceleratedMenuItem (Gdk.Key.Delete, Gdk.ModifierType.None));
-			menu.Append (FillSelection.CreateAcceleratedMenuItem (Gdk.Key.BackSpace, Gdk.ModifierType.None));
+			menu.Append (EraseSelection.CreateAcceleratedMenuItem (Gdk.Key.BackSpace, Gdk.ModifierType.None));
+			menu.Append (FillSelection.CreateAcceleratedMenuItem (Gdk.Key.Delete, Gdk.ModifierType.None));
 			menu.Append (InvertSelection.CreateAcceleratedMenuItem (Gdk.Key.I, Gdk.ModifierType.ControlMask));
-			
+
 			menu.AppendSeparator ();
 			Gtk.Action menu_action = new Gtk.Action ("Palette", Mono.Unix.Catalog.GetString ("Palette"), null, null);
 			Menu palette_menu = (Menu) menu.AppendItem (menu_action.CreateSubMenuItem ()).Submenu;
@@ -158,6 +159,7 @@ namespace Pinta.Core
 
 			PintaCore.Workspace.SelectionChanged += (o, _) => {
 				var visible = false;
+
 				if (PintaCore.Workspace.HasOpenDocuments)
 					visible = PintaCore.Workspace.ActiveDocument.Selection.Visible;
 
@@ -171,6 +173,7 @@ namespace Pinta.Core
 		#endregion
 
 		#region Action Handlers
+
 		private void HandlePintaCoreActionsEditFillSelectionActivated (object sender, EventArgs e)
 		{
 			Document doc = PintaCore.Workspace.ActiveDocument;
@@ -183,10 +186,12 @@ namespace Pinta.Core
 				g.AppendPath (doc.Selection.SelectionPath);
 				g.FillRule = FillRule.EvenOdd;
 
-				g.SetSourceColor (PintaCore.Palette.PrimaryColor);
+				g.Operator = Operator.Source;
+				g.SetSourceColor (PintaCore.Palette.SecondaryColor);
 				g.Fill ();
 			}
 
+			doc.ResetSelectionPaths ();
 			doc.Workspace.Invalidate ();
 			doc.History.PushNewItem (new SimpleHistoryItem ("Menu.Edit.FillSelection.png", Catalog.GetString ("Fill Selection"), old, doc.CurrentUserLayerIndex));
 		}
@@ -223,12 +228,15 @@ namespace Pinta.Core
 				g.Fill ();
 			}
 
+			doc.ResetSelectionPaths ();
+
 			doc.Workspace.Invalidate ();
 
 			if (sender is string && (sender as string) == "Cut")
 				doc.History.PushNewItem (new SimpleHistoryItem (Stock.Cut, Catalog.GetString ("Cut"), old, doc.CurrentUserLayerIndex));
 			else
-				doc.History.PushNewItem (new SimpleHistoryItem ("Menu.Edit.EraseSelection.png", Catalog.GetString ("Erase Selection"), old, doc.CurrentUserLayerIndex));
+				doc.History.PushNewItem (new SimpleHistoryItem ("Menu.Edit.EraseSelection.png", Catalog.GetString ("Erase Selection"), old,
+					doc.CurrentUserLayerIndex));
 		}
 
 		private void HandlePintaCoreActionsEditDeselectActivated (object sender, EventArgs e)
@@ -240,7 +248,7 @@ namespace Pinta.Core
 			SelectionHistoryItem hist = new SelectionHistoryItem ("Menu.Edit.Deselect.png", Catalog.GetString ("Deselect"));
 			hist.TakeSnapshot ();
 
-            doc.ResetSelectionPaths ();
+			doc.ResetSelectionPaths ();
 
 			doc.History.PushNewItem (hist);
 			doc.Workspace.Invalidate ();
@@ -249,6 +257,7 @@ namespace Pinta.Core
 		private void HandlerPintaCoreActionsEditCopyActivated (object sender, EventArgs e)
 		{
 			Gtk.Clipboard cb = Gtk.Clipboard.Get (Gdk.Atom.Intern ("CLIPBOARD", false));
+
 			if (PintaCore.Tools.CurrentTool.TryHandleCopy (cb))
 				return;
 
@@ -257,18 +266,18 @@ namespace Pinta.Core
 			PintaCore.Tools.Commit ();
 
 			using (ImageSurface src = doc.GetClippedLayer (doc.CurrentUserLayerIndex)) {
-
 				Gdk.Rectangle rect = doc.GetSelectedBounds (true);
+
 				if (rect.Width == 0 || rect.Height == 0)
 					return;
-			
+
 				ImageSurface dest = new ImageSurface (Format.Argb32, rect.Width, rect.Height);
 
 				using (Context g = new Context (dest)) {
 					g.SetSourceSurface (src, -rect.X, -rect.Y);
 					g.Paint ();
 				}
-			
+
 				cb.Image = dest.ToPixbuf ();
 
 				(dest as IDisposable).Dispose ();
@@ -286,7 +295,7 @@ namespace Pinta.Core
 			using (var src = doc.GetFlattenedImage ()) {
 				var rect = doc.GetSelectedBounds (true);
 
-				// Copy it to a correctly sized surface 
+				// Copy it to a correctly sized surface
 				using (var dest = new ImageSurface (Format.Argb32, rect.Width, rect.Height)) {
 					using (Context g = new Context (dest)) {
 						g.SetSourceSurface (src, -rect.X, -rect.Y);
@@ -298,37 +307,41 @@ namespace Pinta.Core
 				}
 			}
 		}
-		
+
 		private void HandlerPintaCoreActionsEditCutActivated (object sender, EventArgs e)
 		{
 			Gtk.Clipboard cb = Gtk.Clipboard.Get (Gdk.Atom.Intern ("CLIPBOARD", false));
+
 			if (PintaCore.Tools.CurrentTool.TryHandleCut (cb))
 				return;
+
 			PintaCore.Tools.Commit ();
-			
+
 			// Copy selection
 			HandlerPintaCoreActionsEditCopyActivated (sender, e);
 
 			// Erase selection
-			HandlePintaCoreActionsEditEraseSelectionActivated ("Cut", e);
+			HandlePintaCoreActionsEditFillSelectionActivated ("Cut", e);
 		}
 
 		private void HandlerPintaCoreActionsEditUndoActivated (object sender, EventArgs e)
 		{
 			if (PintaCore.Tools.CurrentTool.TryHandleUndo ())
 				return;
+
 			Document doc = PintaCore.Workspace.ActiveDocument;
 			doc.History.Undo ();
-			PintaCore.Tools.CurrentTool.AfterUndo();
+			PintaCore.Tools.CurrentTool.AfterUndo ();
 		}
 
 		private void HandlerPintaCoreActionsEditRedoActivated (object sender, EventArgs e)
 		{
 			if (PintaCore.Tools.CurrentTool.TryHandleRedo ())
 				return;
+
 			Document doc = PintaCore.Workspace.ActiveDocument;
 			doc.History.Redo ();
-			PintaCore.Tools.CurrentTool.AfterRedo();
+			PintaCore.Tools.CurrentTool.AfterRedo ();
 		}
 
 		private void HandlerPintaCoreActionsEditLoadPaletteActivated (object sender, EventArgs e)
@@ -338,10 +351,11 @@ namespace Pinta.Core
 				Gtk.Stock.Open, Gtk.ResponseType.Ok);
 
 			FileFilter ff = new FileFilter ();
+
 			foreach (var format in PintaCore.System.PaletteFormats.Formats) {
 				if (!format.IsWriteOnly ()) {
 					foreach (var ext in format.Extensions)
-						ff.AddPattern (string.Format("*.{0}", ext));
+						ff.AddPattern (string.Format ("*.{0}", ext));
 				}
 			}
 
@@ -353,13 +367,13 @@ namespace Pinta.Core
 			ff2.AddPattern ("*.*");
 			fcd.AddFilter (ff2);
 
-			fcd.AlternativeButtonOrder = new int[] { (int) ResponseType.Ok, (int) ResponseType.Cancel };
+			fcd.AlternativeButtonOrder = new int[] {(int) ResponseType.Ok, (int) ResponseType.Cancel};
 
 			if (lastPaletteDir != null)
 				fcd.SetCurrentFolder (lastPaletteDir);
-			
+
 			int response = fcd.Run ();
-		
+
 			if (response == (int) Gtk.ResponseType.Ok) {
 				lastPaletteDir = fcd.CurrentFolder;
 				PintaCore.Palette.CurrentPalette.Load (fcd.Filename);
@@ -381,7 +395,7 @@ namespace Pinta.Core
 				}
 			}
 
-			fcd.AlternativeButtonOrder = new int[] { (int) ResponseType.Ok, (int) ResponseType.Cancel };
+			fcd.AlternativeButtonOrder = new int[] {(int) ResponseType.Ok, (int) ResponseType.Cancel};
 
 			if (lastPaletteDir != null)
 				fcd.SetCurrentFolder (lastPaletteDir);
@@ -394,10 +408,11 @@ namespace Pinta.Core
 				string finalFileName = fcd.Filename;
 
 				string extension = System.IO.Path.GetExtension (fcd.Filename);
-				if (string.IsNullOrEmpty(extension))
+
+				if (string.IsNullOrEmpty (extension))
 					finalFileName += "." + format.Extensions.First ();
 
-				PintaCore.Palette.CurrentPalette.Save(finalFileName, format.Saver);
+				PintaCore.Palette.CurrentPalette.Save (finalFileName, format.Saver);
 			}
 
 			fcd.Destroy ();
@@ -418,7 +433,8 @@ namespace Pinta.Core
 			doc.ToolLayer.Clear ();
 
 			SelectionHistoryItem historyItem = new SelectionHistoryItem ("Menu.Edit.InvertSelection.png",
-			                                                             Catalog.GetString ("Invert Selection"));
+				Catalog.GetString ("Invert Selection"));
+
 			historyItem.TakeSnapshot ();
 
 			doc.Selection.Invert (doc.SelectionLayer.Surface, doc.ImageSize);
@@ -432,12 +448,14 @@ namespace Pinta.Core
 			if (!PintaCore.Workspace.HasOpenDocuments) {
 				Undo.Sensitive = false;
 				Redo.Sensitive = false;
+
 				return;
 			}
 
 			Redo.Sensitive = PintaCore.Workspace.ActiveWorkspace.History.CanRedo;
 			Undo.Sensitive = PintaCore.Workspace.ActiveWorkspace.History.CanUndo;
 		}
+
 		#endregion
 	}
 }
