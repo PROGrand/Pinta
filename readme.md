@@ -9,6 +9,7 @@ Goal is to maximize convenience when program is used as sci-fi sketch desk
 - New image: take size from last new image dialog and show actual size image in case of window is maximized.
 - Restore brush tools sizes on reload
 - Cut and Erase operations fill to secondary color
+- Rectangle, Lasso and Magic Wand selects mapped to different keyboard shortcuts: S, Q, W
 
 
 # Pinta - [Simple Gtk# Paint Program](http://pinta-project.com/)

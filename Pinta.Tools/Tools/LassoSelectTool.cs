@@ -1,21 +1,21 @@
-// 
+//
 // LassoSelectTool.cs
-//  
+//
 // Author:
 //       Jonathan Pobst <monkey@jpobst.com>
-// 
+//
 // Copyright (c) 2010 Jonathan Pobst
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,7 +52,7 @@ namespace Pinta.Tools
 		public override string Name { get { return Catalog.GetString ("Lasso Select"); } }
 		public override string Icon { get { return "Tools.LassoSelect.png"; } }
 		public override string StatusBarText { get { return Catalog.GetString ("Click and drag to draw the outline for a selection area."); } }
-		public override Gdk.Key ShortcutKey { get { return Gdk.Key.S; } }
+		public override Gdk.Key ShortcutKey { get { return Gdk.Key.Q; } }
 		public override Gdk.Cursor DefaultCursor { get { return new Gdk.Cursor (Gdk.Display.Default, PintaCore.Resources.GetIcon ("Cursor.LassoSelect.png"), 9, 18); } }
 		public override int Priority { get { return 9; } }
 		#endregion
@@ -72,7 +72,7 @@ namespace Pinta.Tools
 			hist = new SelectionHistoryItem (Icon, Name);
 			hist.TakeSnapshot ();
 
-			combine_mode = PintaCore.Workspace.SelectionHandler.DetermineCombineMode (args);			
+			combine_mode = PintaCore.Workspace.SelectionHandler.DetermineCombineMode (args);
 			path = null;
 			is_drawing = true;
 
@@ -104,12 +104,12 @@ namespace Pinta.Tools
 				} else {
 					g.MoveTo (x, y);
 				}
-					
+
 				g.LineTo (x, y);
 				lasso_polygon.Add(new IntPoint((long)x, (long)y));
 
 				path = g.CopyPath ();
-				
+
 				g.FillRule = FillRule.EvenOdd;
 				g.ClosePath ();
 			}
